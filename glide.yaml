@@ -1,0 +1,4 @@
+package: github.com/androbility/adbi
+import:
+- package: github.com/Sirupsen/logrus
+- package: github.com/spf13/viper
