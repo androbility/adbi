@@ -2,6 +2,7 @@ package adbi
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 )
 
@@ -28,4 +29,16 @@ func Key(name string) (Keycode, error) {
 	}
 
 	return KEYCODE_UNKNOWN, fmt.Errorf("invalid Keycode: %s", name)
+}
+
+// KeyNames returns a sorted slice of valid key names.
+func KeyNames() []string {
+	names := []string{}
+	for name, _ := range keycodeLookupTable {
+		names = append(names, name)
+	}
+
+	sort.Strings(names)
+
+	return names
 }
