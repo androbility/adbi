@@ -19,6 +19,8 @@ func LoadConfigFile(configDir, defaultBindings string) {
 	if err := viper.ReadInConfig(); err != nil {
 		log.Debug("Configuration file not found; using defaults.")
 
+		viper.Reset()
+		viper.SetConfigType("json")
 		r := strings.NewReader(defaultBindings)
 		if err = viper.ReadConfig(r); err != nil {
 			log.WithFields(log.Fields{
