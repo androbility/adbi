@@ -11,7 +11,9 @@ import (
 // LoadConfigFile attempts to read a config-file from configDir.
 // Failing that, LoadConfigFile parses defaultBindings for the
 // configuration.
-func LoadConfigFile(configDir, defaultBindings string) {
+func LoadConfigFile(configDir, defaultBindings string) map[rune]Keyevent {
+	keymap := map[rune]Keyevent{}
+
 	viper.SetConfigName("config")
 	viper.AddConfigPath(configDir)
 	viper.SetDefault("keybindings", keymap)
@@ -37,30 +39,20 @@ func LoadConfigFile(configDir, defaultBindings string) {
 		}
 		keycodeName = strings.ToUpper(keycodeName)
 
-		// Is the specified keycodeName valid?  If not, skip to the next.
-		// e.g., "KEYCODE_HOME" is valid, "KEYCODE_HOMEZ" isn't
-		newKeyCode, ok := keycodeLookupTable[keycodeName]
-		if !ok {
-			log.WithFields(log.Fields{
-				"key": keycodeName,
-			}).Warn("Invalid key")
-			continue
-		}
+		// Is the specified keycodeName valid?  If not, KEYCODE_UNKNOWN.
+		newKeyCode := Key(keycodeName)
 
 		// Extract the first rune from keycodeNewMapping.
 		// That's the key we want to set.
-		r, _ := utf8.DecodeRuneInString(keycodeNewMapping)
+		key, _ := utf8.DecodeRuneInString(keycodeNewMapping)
 
-		// Set key to
-		keymap[r] = newKeyCode
+		keymap[key] = newKeyCode
 	}
 
 	// If no keys are defined, fail.
 	if len(keymap) == 0 {
 		log.Fatal("No keybindings are defined; aborting.")
 	}
-}
 
-var (
-	keymap = map[rune]Keycode{}
-)
+	return keymap
+}

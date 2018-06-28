@@ -6,29 +6,25 @@ import (
 	"strings"
 )
 
-type Keycode uint32
+type Keyevent uint32
 
-func (k Keycode) Event() ([]byte, bool) {
-	if code, ok := keymap[rune(k)]; ok {
-		return []byte(fmt.Sprintf("input keyevent %d\n", code)), true
-	}
-
-	return nil, false
+func (k Keyevent) Trigger() []byte {
+	return []byte(fmt.Sprintf("input keyevent %d\n", uint32(k)))
 }
 
-func (k Keycode) Rune() rune {
+func (k Keyevent) Rune() rune {
 	return rune(k)
 }
 
-// Key returns a Keycode representing the provided name.
+// Key returns a Keyevent representing the provided name.
 //
-// Returns KEYCODE_UNKNOWN and an error for invalid key names.
-func Key(name string) (Keycode, error) {
+// Returns KEYCODE_UNKNOWN for invalid key names.
+func Key(name string) Keyevent {
 	if code, ok := keycodeLookupTable[strings.ToUpper(name)]; ok {
-		return code, nil
+		return code
 	}
 
-	return KEYCODE_UNKNOWN, fmt.Errorf("invalid Keycode: %s", name)
+	return KEYCODE_UNKNOWN
 }
 
 // KeyNames returns a sorted slice of valid key names.

@@ -45,17 +45,9 @@ func New() (*Commander, error) {
 	return cmndr, nil
 }
 
-func (c *Commander) Write(key Keycode) error {
-	code, ok := key.Event()
-	if !ok {
-		log.WithFields(log.Fields{
-			"key": key.Rune(),
-		}).Error("Key not bound")
-
-		return nil
-	}
-
-	if _, err := c.in.Write(code); err != nil {
+func (c *Commander) Signal(key Keyevent) error {
+	inputEvent := key.Trigger()
+	if _, err := c.in.Write(inputEvent); err != nil {
 		// Communication with the Android device failed.
 		log.WithFields(log.Fields{
 			"error": err,
@@ -70,7 +62,7 @@ func (c *Commander) Write(key Keycode) error {
 		return errors.New("server connection lost")
 	}
 
-	log.Info(strings.Trim(string(code), "\n"))
+	log.Info(strings.Trim(string(inputEvent), "\n"))
 
 	return nil
 }
@@ -94,7 +86,7 @@ func (c *Commander) ping(dur time.Duration) {
 				break
 			}
 			c.m.Lock()
-			c.Write(Keycode('w'))
+			c.Signal(Keyevent('w'))
 			c.m.Unlock()
 		case <-c.stopCh:
 			return
