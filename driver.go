@@ -2,6 +2,7 @@ package adbi
 
 import (
 	"errors"
+	"fmt"
 	"io"
 	"os"
 	"os/exec"
@@ -9,7 +10,7 @@ import (
 	"sync"
 	"time"
 
-	log "github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 )
 
 type Commander struct {
@@ -40,7 +41,7 @@ func New() (*Commander, error) {
 		m:          &sync.Mutex{},
 		stopCh:     make(chan interface{}),
 	}
-	go cmndr.ping(179 * time.Second)
+	//	go cmndr.ping(179 * time.Second)
 
 	return cmndr, nil
 }
@@ -63,6 +64,27 @@ func (c *Commander) Signal(key Keyevent) error {
 	}
 
 	log.Info(strings.Trim(string(inputEvent), "\n"))
+
+	return nil
+}
+
+func (c *Commander) Raw(cmd string) error {
+	if _, err := c.in.Write([]byte(fmt.Sprintf("input %s\n", cmd))); err != nil {
+		// Communication with the Android device failed.
+		log.WithFields(log.Fields{
+			"error": err,
+			"key":   rune('\x00'),
+		}).Error(fmt.Sprintf("%s send failed", cmd))
+
+		// We can assume the server is down, or restarting.
+		// Let's return an error, kill cmd, and close the channel.
+		defer close(c.stopCh)
+		defer c.cmd.Wait()
+
+		return errors.New("server connection lost")
+	}
+
+	log.Info(strings.Trim(cmd, "\n"))
 
 	return nil
 }
