@@ -12,6 +12,11 @@ func (k Keyevent) Trigger() []byte {
 	return []byte(fmt.Sprintf("input keyevent %d\n", uint32(k)))
 }
 
+func (k Keyevent) TriggerWithRepeat(n int) []byte {
+	events := strings.Repeat(fmt.Sprintf(" %d", uint32(k)), n)
+	return []byte(fmt.Sprintf("input keyevent %s\n", events))
+}
+
 func (k Keyevent) Rune() rune {
 	return rune(k)
 }

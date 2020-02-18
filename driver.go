@@ -10,7 +10,7 @@ import (
 	"sync"
 	"time"
 
-	log "github.com/sirupsen/logrus"
+	"github.com/labstack/gommon/log"
 )
 
 type Commander struct {
@@ -50,10 +50,32 @@ func (c *Commander) Signal(key Keyevent) error {
 	inputEvent := key.Trigger()
 	if _, err := c.in.Write(inputEvent); err != nil {
 		// Communication with the Android device failed.
-		log.WithFields(log.Fields{
-			"error": err,
-			"key":   rune(key),
-		}).Error("KeyEvent send failed")
+		// log.WithFields(log.Fields{
+		// 	"error": err,
+		// 	"key":   rune(key),
+		// }).Error("KeyEvent send failed")
+
+		// We can assume the server is down, or restarting.
+		// Let's return an error, kill cmd, and close the channel.
+		defer close(c.stopCh)
+		defer c.cmd.Wait()
+
+		return errors.New("server connection lost")
+	}
+
+	log.Info(strings.Trim(string(inputEvent), "\n"))
+
+	return nil
+}
+
+func (c *Commander) SignalWithRepeat(key Keyevent, num int) error {
+	inputEvent := key.TriggerWithRepeat(num)
+	if _, err := c.in.Write(inputEvent); err != nil {
+		// Communication with the Android device failed.
+		// log.WithFields(log.Fields{
+		// 	"error": err,
+		// 	"key":   rune(key),
+		// }).Error("KeyEvent send failed")
 
 		// We can assume the server is down, or restarting.
 		// Let's return an error, kill cmd, and close the channel.
@@ -71,10 +93,10 @@ func (c *Commander) Signal(key Keyevent) error {
 func (c *Commander) Raw(cmd string) error {
 	if _, err := c.in.Write([]byte(fmt.Sprintf("input %s\n", cmd))); err != nil {
 		// Communication with the Android device failed.
-		log.WithFields(log.Fields{
-			"error": err,
-			"key":   rune('\x00'),
-		}).Error(fmt.Sprintf("%s send failed", cmd))
+		// log.WithFields(log.Fields{
+		// 	"error": err,
+		// 	"key":   rune('\x00'),
+		// }).Error(fmt.Sprintf("%s send failed", cmd))
 
 		// We can assume the server is down, or restarting.
 		// Let's return an error, kill cmd, and close the channel.

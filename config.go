@@ -4,7 +4,7 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	log "github.com/sirupsen/logrus"
+	"github.com/labstack/gommon/log"
 	"github.com/spf13/viper"
 )
 
@@ -25,9 +25,9 @@ func LoadConfigFile(configDir, defaultBindings string) map[rune]Keyevent {
 		viper.SetConfigType("json")
 		r := strings.NewReader(defaultBindings)
 		if err = viper.ReadConfig(r); err != nil {
-			log.WithFields(log.Fields{
-				"error": err,
-			}).Debug("Loading default configuration failed.  Please contact the developer.")
+			// log.WithFields(log.Fields{
+			// 	"error": err,
+			// }).Debug("Loading default configuration failed.  Please contact the developer.")
 		}
 	}
 
