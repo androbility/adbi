@@ -9,7 +9,28 @@ import (
 type Keyevent uint32
 
 func (k Keyevent) Trigger() []byte {
-	return []byte(fmt.Sprintf("input keyevent %d\n", uint32(k)))
+	if k < end_button_input {
+		return []byte(fmt.Sprintf("input keyevent %d\n", uint32(k)))
+	}
+
+	switch {
+	case k > begin_text_input && k < end_text_input:
+		// idk yet
+	case k > begin_instant_mouse_input && k < end_instant_mouse_input:
+		if k == KEYCODE_MOUSE_SCROLL_UP {
+			return []byte(fmt.Sprint("input swipe 100 0 100 900\n"))
+		} else {
+			return []byte(fmt.Sprint("input swipe 100 900 100 0\n"))
+		}
+	case k > begin_slow_mouse_input && k < end_slow_mouse_input:
+		if k == KEYCODE_MOUSE_SCROLL_UP {
+			return []byte(fmt.Sprint("input swipe 100 0 100 900 5000\n"))
+		} else {
+			return []byte(fmt.Sprint("input swipe 100 900 100 5000\n"))
+		}
+	}
+
+	return []byte{}
 }
 
 func (k Keyevent) TriggerWithRepeat(n int) []byte {
