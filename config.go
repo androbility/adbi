@@ -1,53 +1,73 @@
 package adbi
 
 import (
+	"encoding/json"
+	"io/ioutil"
+	"os"
 	"strings"
 	"unicode/utf8"
 
 	log "github.com/sirupsen/logrus"
-	"github.com/spf13/viper"
 )
 
 // LoadConfigFile attempts to read a config-file from configDir.
 // Failing that, LoadConfigFile parses defaultBindings for the
 // configuration.
 func LoadConfigFile(configDir, defaultBindings string) map[rune]Keyevent {
-	keymap := map[rune]Keyevent{}
+	configFile := os.ExpandEnv(configDir) + "/config.json"
 
-	viper.SetConfigName("config")
-	viper.AddConfigPath(configDir)
-	viper.SetDefault("keybindings", keymap)
+	// 1. Open configFile; fallback to defaultBindings on error
+	// 2. get io.ReadCloser from either.
+	// 3. Unmarshal the json.
+	// 4. Cast values as strings.
+	keymapAsBytes, err := ioutil.ReadFile(configFile)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"error": err,
+		}).Debug("Error reading config file.  Using default keybindings.")
 
-	if err := viper.ReadInConfig(); err != nil {
-		log.Debug("Configuration file not found; using defaults.")
+		keymapAsBytes = []byte(defaultBindings)
+	}
+	keymapReader := strings.NewReader(string(keymapAsBytes))
 
-		viper.Reset()
-		viper.SetConfigType("json")
-		r := strings.NewReader(defaultBindings)
-		if err = viper.ReadConfig(r); err != nil {
-			log.WithFields(log.Fields{
-				"error": err,
-			}).Debug("Loading default configuration failed.  Please contact the developer.")
-		}
+	keybindingsConfig, err := ioutil.ReadAll(keymapReader)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"error": err,
+		}).Fatal("Error reading keybindings.  Aborting startup.")
 	}
 
-	keybindings := viper.GetStringMapString("keybindings")
+	// Now json.Unmarshal.
+	var keybindingsContainer map[string]interface{}
+	err = json.Unmarshal(keybindingsConfig, &keybindingsContainer)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"error": err,
+		}).Fatal("Error unmarshaling the configuration.  Aborting startup.")
+	}
+
+	keybindings, ok := keybindingsContainer["keybindings"].(map[string]interface{})
+	if !ok {
+		log.WithFields(log.Fields{
+			"error": err,
+		}).Fatal("Malformed configuration.  Aborting startup.")
+	}
+
+	keymap := map[rune]Keyevent{}
 	// e.g., "h": "KEYCODE_HOME"
 	for keycodeNewMapping, keycodeName := range keybindings {
 		// Skip on empty value
 		if len(keycodeNewMapping) == 0 {
 			continue
 		}
-		keycodeName = strings.ToUpper(keycodeName)
+		keycodeName = strings.ToUpper(keycodeName.(string))
 
 		// Is the specified keycodeName valid?  If not, KEYCODE_UNKNOWN.
-		newKeyCode := Key(keycodeName)
+		newKeyCode := Key(keycodeName.(string))
 
 		// Extract the first rune from keycodeNewMapping.
 		// That's the key we want to set.
 		key, _ := utf8.DecodeRuneInString(keycodeNewMapping)
-		log.Printf("kcnm: %v; kcname: %v; nkc: %v; key: %v",
-			keycodeNewMapping, keycodeName, newKeyCode, key)
 
 		keymap[key] = newKeyCode
 	}
