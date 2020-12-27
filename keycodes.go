@@ -4,13 +4,19 @@ import (
 	"fmt"
 	"sort"
 	"strings"
+	"unicode"
 )
 
 type Keyevent uint32
 
 func (k Keyevent) Trigger() []byte {
+	return k.TriggerWithRepeat(1)
+}
+
+func (k Keyevent) TriggerWithRepeat(n int) []byte {
 	if k < end_button_input {
-		return []byte(fmt.Sprintf("input keyevent %d\n", uint32(k)))
+		events := strings.Repeat(fmt.Sprintf(" %d", uint32(k)), n)
+		return []byte(fmt.Sprintf("input keyevent %s\n", strings.TrimFunc(events, unicode.IsSpace)))
 	}
 
 	switch {
@@ -30,12 +36,7 @@ func (k Keyevent) Trigger() []byte {
 		}
 	}
 
-	return []byte{}
-}
-
-func (k Keyevent) TriggerWithRepeat(n int) []byte {
-	events := strings.Repeat(fmt.Sprintf(" %d", uint32(k)), n)
-	return []byte(fmt.Sprintf("input keyevent %s\n", events))
+	return nil
 }
 
 func (k Keyevent) Rune() rune {
