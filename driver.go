@@ -47,7 +47,11 @@ func New() (*Commander, error) {
 }
 
 func (c *Commander) Signal(key Keyevent) error {
-	inputEvent := key.Trigger()
+	return c.SignalWithRepeat(key, 1)
+}
+
+func (c *Commander) SignalWithRepeat(key Keyevent, n int) error {
+	inputEvent := key.TriggerWithRepeat(n)
 	if _, err := c.in.Write(inputEvent); err != nil {
 		// Communication with the Android device failed.
 		log.WithFields(log.Fields{
