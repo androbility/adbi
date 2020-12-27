@@ -31,8 +31,9 @@ func LoadConfigFile(configDir, defaultBindings string) map[rune]Keyevent {
 		}
 	}
 
+	keybindings := viper.GetStringMapString("keybindings")
 	// e.g., "h": "KEYCODE_HOME"
-	for keycodeNewMapping, keycodeName := range viper.GetStringMapString("keybindings") {
+	for keycodeNewMapping, keycodeName := range keybindings {
 		// Skip on empty value
 		if len(keycodeNewMapping) == 0 {
 			continue
@@ -45,6 +46,8 @@ func LoadConfigFile(configDir, defaultBindings string) map[rune]Keyevent {
 		// Extract the first rune from keycodeNewMapping.
 		// That's the key we want to set.
 		key, _ := utf8.DecodeRuneInString(keycodeNewMapping)
+		log.Printf("kcnm: %v; kcname: %v; nkc: %v; key: %v",
+			keycodeNewMapping, keycodeName, newKeyCode, key)
 
 		keymap[key] = newKeyCode
 	}
