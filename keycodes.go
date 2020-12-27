@@ -23,10 +23,10 @@ func (k Keyevent) Trigger() []byte {
 			return []byte(fmt.Sprint("input swipe 100 900 100 0\n"))
 		}
 	case k > begin_slow_mouse_input && k < end_slow_mouse_input:
-		if k == KEYCODE_MOUSE_SCROLL_UP {
+		if k == KEYCODE_MOUSE_SCROLL_UP_READING_SPEED {
 			return []byte(fmt.Sprint("input swipe 100 0 100 900 5000\n"))
 		} else {
-			return []byte(fmt.Sprint("input swipe 100 900 100 5000\n"))
+			return []byte(fmt.Sprint("input swipe 100 900 100 0 5000\n"))
 		}
 	}
 
